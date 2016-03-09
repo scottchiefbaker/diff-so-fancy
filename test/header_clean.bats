@@ -63,6 +63,13 @@ output=$( load_fixture "file-moves" | $diff_so_fancy )
     refute_output --partial 'Use of uninitialized value'
 }
 
+@test "+/- symbols are stripped (complex-hunks on git show)" {
+	output=$( load_fixture "complex-hunks" | $diff_so_fancy)
+	lines=$( printf "%s" "$output")
+	run printf "%s" "$lines"
+  	refute_line --index 29 "[1;32m+	return 1;[m"
+}
+
 @test "mnemonicprefix handling" {
 	output=$( load_fixture "mnemonicprefix" | $diff_so_fancy )
 	assert_output --partial 'modified: test/header_clean.bats'
