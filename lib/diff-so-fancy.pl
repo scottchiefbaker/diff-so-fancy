@@ -61,9 +61,9 @@ while (my $line = <STDIN>) {
 	# Look for git index and replace it horizontal line (header later) #
 	####################################################################
 	if ($line =~ /^${ansi_color_regex}index /) {
-		# Print the line color and then the actual line
-		$horizontal_color = $1;
-		print horizontal_rule($horizontal_color);
+		if ($patch_mode) {
+			print "\n";
+		}
 	#########################
 	# Look for the filename #
 	#########################
@@ -71,18 +71,22 @@ while (my $line = <STDIN>) {
 		$last_file_seen = $5;
 		$last_file_seen =~ s|^\w/||; # Remove a/ (and handle diff.mnemonicPrefix).
 		$in_hunk = 0;
+		if ($patch_mode) {
+			print "\n";
+		}
 	########################################
 	# Find the first file: --- a/README.md #
 	########################################
 	} elsif (!$in_hunk && $line =~ /^$ansi_color_regex--- (\w\/)?(.+?)(\e|\t|$)/) {
 		$file_1 = $5;
 
+		# Print the line color and then the actual line
+		$horizontal_color = $1;
+		print horizontal_rule($horizontal_color);
+
 		# Find the second file on the next line: +++ b/README.md
 		my $next = <STDIN>;
 		$next    =~ /^$ansi_color_regex\+\+\+ (\w\/)?(.+?)(\e|\t|$)/;
-		if ($1) {
-			print $1; # Print out whatever color we're using
-		}
 		$file_2 = $5;
 		if ($file_2 ne "/dev/null") {
 			$last_file_seen = $file_2;
@@ -92,10 +96,6 @@ while (my $line = <STDIN>) {
 
 		# Print out the bottom horizontal line of the header
 		print horizontal_rule($horizontal_color);
-
-		if ($patch_mode) {
-			print "\n";
-		}
 	########################################
 	# Check for "@@ -3,41 +3,63 @@" syntax #
 	########################################
@@ -132,10 +132,6 @@ while (my $line = <STDIN>) {
 		my $change = file_change_string($2,$4);
 		print "$horizontal_color$change (binary)\n";
 		print horizontal_rule($horizontal_color);
-
-		if ($patch_mode) {
-			print "\n";
-		}
 	#####################################################
 	# Check if we're changing the permissions of a file #
 	#####################################################
@@ -166,10 +162,6 @@ while (my $line = <STDIN>) {
 	}
 
 	$line_num++;
-}
-
-if ($patch_mode) {
-    print "\n";
 }
 
 ######################################################################################################
