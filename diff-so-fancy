@@ -572,6 +572,8 @@ sub filter_stdin_through_diff_highlight {
 		my $ok = DiffHighlight::handle_line($line);
 	}
 
+	DiffHighlight::flush();
+
 	return @dh_lines;
 }
 
