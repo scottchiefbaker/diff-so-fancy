@@ -7,6 +7,8 @@ my $VERSION = "1.0.0";
 use strict;
 use warnings FATAL => 'all';
 
+use Dir::Self;
+use lib __DIR__ . "/lib";
 use File::Basename; # for dirname
 use Cwd;            # For realpath()
 
