@@ -573,8 +573,16 @@ sub filter_stdin_through_diff_highlight {
 # Find the location of diff-highlight
 sub find_diff_highlight {
     my $dh         = "diff-highlight";
-    my $dh_in_path = which($dh);
+    my $dh_in_path;
     my $ret;
+
+	# Windows needs the where command because 'which' is not reliable
+	if ($^O eq 'MSWin32' or $^O eq 'dos' or $^O eq 'os2' or $^O eq 'cygwin') {
+		$dh_in_path = trim(`where $dh`);
+	# Linux / OS X etc
+	} else {
+		$dh_in_path = trim(`which $dh 2>/dev/null`);
+	}
 
     # We check for diff-highlight in three places:
     # 1) System path
@@ -599,84 +607,4 @@ sub find_diff_highlight {
     }
 
     return $ret;
-}
-
-# Borrowed and simplified from: https://metacpan.org/pod/File::Which
-sub which {
-	use File::Spec;
-	my ($exec) = @_;
-
-	return undef unless defined $exec;
-	return undef if $exec eq '';
-
-	use constant IS_DOS => ($^O eq 'MSWin32' or $^O eq 'dos' or $^O eq 'os2');
-	use constant IS_CYG => ($^O eq 'cygwin');
-
-	# For Win32 systems, stores the extensions used for
-	# executable files
-	# For others, the empty string is used
-	# because 'perl' . '' eq 'perl' => easier
-	my @PATHEXT = ('');
-	if ( IS_DOS ) {
-		# WinNT. PATHEXT might be set on Cygwin, but not used.
-		if ( $ENV{PATHEXT} ) {
-			push @PATHEXT, split ';', $ENV{PATHEXT};
-		} else {
-			# Win9X or other: doesn't have PATHEXT, so needs hardcoded.
-			push @PATHEXT, qw{.com .exe .bat};
-		}
-	} elsif ( IS_CYG ) {
-		# See this for more info
-		# http://cygwin.com/cygwin-ug-net/using-specialnames.html#pathnames-exe
-		push @PATHEXT, qw{.exe .com};
-	}
-
-	my $all = 1; # Always return an array (not just one)
-	my @results = ();
-
-	return $exec
-	if !IS_DOS and $exec =~ /\// and -f $exec and -x $exec;
-
-	my @path = File::Spec->path;
-	if ( IS_DOS ) {
-		unshift @path, File::Spec->curdir;
-	}
-
-	foreach my $base ( map { File::Spec->catfile($_, $exec) } @path ) {
-		for my $ext ( @PATHEXT ) {
-			my $file = $base.$ext;
-
-			# We don't want dirs (as they are -x)
-			next if -d $file;
-
-			if (
-				# Executable, normal case
-				-x _
-					or (
-					# MacOS doesn't mark as executable so we check -e
-					(
-						( IS_DOS or IS_CYG )
-							and
-						grep {
-						$file =~ /$_\z/i
-						} @PATHEXT[1..$#PATHEXT]
-					)
-					# DOSish systems don't pass -x on
-					# non-exe/bat/com files. so we check -e.
-					# However, we don't want to pass -e on files
-					# that aren't in PATHEXT, like README.
-						and -e _
-				)
-			) {
-				return $file unless $all;
-				push @results, $file;
-			}
-		}
-	}
-
-	if ( $all ) {
-		return @results;
-	} else {
-		return undef;
-	}
 }
