@@ -631,7 +631,7 @@ sub which {
 		push @PATHEXT, qw{.exe .com};
 	}
 
-	my $all = wantarray;
+	my $all = 1; # Always return an array (not just one)
 	my @results = ();
 
 	return $exec
