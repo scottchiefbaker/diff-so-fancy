@@ -577,7 +577,7 @@ sub find_diff_highlight {
     my $ret;
 
 	# Windows needs the where command because 'which' is not reliable
-	if ($^O eq 'MSWin32' or $^O eq 'dos' or $^O eq 'os2' or $^O eq 'cygwin') {
+	if ($^O eq 'MSWin32' or $^O eq 'dos' or $^O eq 'os2' or $^O eq 'cygwin' or $^O eq 'msys') {
 		$dh_in_path = trim(`where $dh`);
 	# Linux / OS X etc
 	} else {
